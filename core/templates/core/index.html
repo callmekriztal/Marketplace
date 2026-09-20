@@ -1,7 +1,69 @@
-{%extends 'core/base.html' %}
-    {%block title%}
-    Welcome
-    {%endblock%}
-    {% block content%}
-   <h1>The front page</h1>
-   {%endblock%}
+{% extends 'core/base.html' %}
+
+{% block title %}Welcome{% endblock %}
+
+{% block content %}
+<!-- Hero Banner -->
+<div class="bg-gradient-to-r from-teal-600 to-teal-800 text-white rounded-3xl p-10 mb-12 shadow-lg">
+    <h1 class="text-4xl md:text-5xl font-extrabold mb-4">Buy & Sell Items Easily</h1>
+    <p class="text-teal-100 text-lg mb-6 max-w-2xl">
+        Discover great deals on pre-owned items or list your own items for sale in seconds.
+    </p>
+    <div class="space-x-4">
+        <a href="{% url 'browse' %}" class="inline-block px-6 py-3 bg-white text-teal-800 font-bold rounded-xl hover:bg-gray-100 shadow transition">Browse Items</a>
+        <a href="{% url 'new_item' %}" class="inline-block px-6 py-3 bg-teal-900 text-white font-bold rounded-xl hover:bg-teal-950 transition">List an Item</a>
+    </div>
+</div>
+
+<!-- Latest Items Section -->
+<div class="mb-12">
+    <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold text-gray-800">Newest Listings</h2>
+        <a href="{% url 'browse' %}" class="text-teal-600 font-semibold hover:underline">View All &rarr;</a>
+    </div>
+
+    {% if items %}
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+            {% for item in items %}
+                <a href="{% url 'detail' item.pk %}" class="bg-white rounded-2xl shadow-sm hover:shadow-md transition overflow-hidden border border-gray-100 flex flex-col">
+                    {% if item.image %}
+                        <div class="h-48 overflow-hidden bg-gray-100">
+                            <img src="{{ item.image.url }}" alt="{{ item.title }}" class="w-full h-full object-cover hover:scale-105 transition duration-300">
+                        </div>
+                    {% else %}
+                        <div class="h-48 bg-gray-200 flex items-center justify-center text-gray-400 font-medium">
+                            No Image Available
+                        </div>
+                    {% endif %}
+                    <div class="p-5 flex flex-col flex-grow">
+                        <span class="text-xs font-semibold text-teal-600 bg-teal-50 uppercase tracking-wider px-2.5 py-1 rounded-md w-max mb-2">
+                            {{ item.category.name }}
+                        </span>
+                        <h3 class="text-lg font-bold text-gray-900 mb-1 line-clamp-1">{{ item.title }}</h3>
+                        <p class="text-xl font-bold text-teal-700 mt-auto">${{ item.price }}</p>
+                    </div>
+                </a>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="bg-white p-8 rounded-2xl text-center border border-gray-200 text-gray-500">
+            No items listed yet. Be the first to <a href="{% url 'new_item' %}" class="text-teal-600 underline font-semibold">list an item</a>!
+        </div>
+    {% endif %}
+</div>
+
+<!-- Categories Section -->
+<div>
+    <h2 class="text-2xl font-bold text-gray-800 mb-6">Explore Categories</h2>
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+        {% for category in categories %}
+            <a href="{% url 'browse' %}?category={{ category.id }}" class="bg-white p-6 rounded-2xl border border-gray-200 text-center font-bold text-gray-700 hover:border-teal-500 hover:text-teal-600 hover:shadow-sm transition">
+                {{ category.name }}
+                <span class="block text-xs font-normal text-gray-400 mt-1">{{ category.items.count }} items</span>
+            </a>
+        {% empty %}
+            <p class="text-gray-500 col-span-full">No categories created yet.</p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

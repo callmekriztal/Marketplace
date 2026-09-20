@@ -1,0 +1,80 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Browse Items{% endblock %}
+
+{% block content %}
+<div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+    
+    <!-- Sidebar Filters -->
+    <div class="md:col-span-1 bg-white p-6 rounded-2xl border border-gray-200 h-fit">
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Categories</h2>
+        <ul class="space-y-2">
+            <li>
+                <a href="{% url 'browse' %}{% if query %}?q={{ query }}{% endif %}" class="block px-3 py-2 rounded-xl text-sm font-semibold {% if not category_id %}bg-teal-50 text-teal-700{% else %}text-gray-600 hover:bg-gray-100{% endif %}">
+                    All Categories
+                </a>
+            </li>
+            {% for category in categories %}
+                <li>
+                    <a href="{% url 'browse' %}?category={{ category.id }}{% if query %}&q={{ query }}{% endif %}" class="block px-3 py-2 rounded-xl text-sm font-semibold {% if category_id == category.id %}bg-teal-50 text-teal-700{% else %}text-gray-600 hover:bg-gray-100{% endif %} flex justify-between items-center">
+                        <span>{{ category.name }}</span>
+                        <span class="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">{{ category.items.count }}</span>
+                    </a>
+                </li>
+            {% endfor %}
+        </ul>
+        
+        {% if category_id or query %}
+            <div class="mt-6 pt-4 border-t border-gray-200">
+                <a href="{% url 'browse' %}" class="text-xs text-red-600 font-semibold hover:underline block text-center">Clear Filters</a>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Main Results Section -->
+    <div class="md:col-span-3">
+        <!-- Search Bar -->
+        <form method="get" action="{% url 'browse' %}" class="mb-6 flex gap-3">
+            {% if category_id %}
+                <input type="hidden" name="category" value="{{ category_id }}">
+            {% endif %}
+            <input type="text" name="q" value="{{ query }}" placeholder="Search items by title or description..." class="flex-grow py-3 px-4 border border-gray-300 rounded-xl focus:outline-none focus:border-teal-500">
+            <button type="submit" class="px-6 py-3 bg-teal-600 text-white font-bold rounded-xl hover:bg-teal-700 transition shadow-sm">
+                Search
+            </button>
+        </form>
+
+        <!-- Items Grid -->
+        {% if items %}
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {% for item in items %}
+                    <a href="{% url 'detail' item.pk %}" class="bg-white rounded-2xl shadow-sm hover:shadow-md transition overflow-hidden border border-gray-100 flex flex-col">
+                        {% if item.image %}
+                            <div class="h-48 overflow-hidden bg-gray-100">
+                                <img src="{{ item.image.url }}" alt="{{ item.title }}" class="w-full h-full object-cover hover:scale-105 transition duration-300">
+                            </div>
+                        {% else %}
+                            <div class="h-48 bg-gray-200 flex items-center justify-center text-gray-400 font-medium">
+                                No Image
+                            </div>
+                        {% endif %}
+                        <div class="p-5 flex flex-col flex-grow">
+                            <span class="text-xs font-semibold text-teal-600 bg-teal-50 uppercase tracking-wider px-2.5 py-1 rounded-md w-max mb-2">
+                                {{ item.category.name }}
+                            </span>
+                            <h3 class="text-lg font-bold text-gray-900 mb-1 line-clamp-1">{{ item.title }}</h3>
+                            <p class="text-xl font-bold text-teal-700 mt-auto">${{ item.price }}</p>
+                        </div>
+                    </a>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="bg-white p-12 rounded-2xl text-center border border-gray-200">
+                <h3 class="text-lg font-bold text-gray-700 mb-1">No items found</h3>
+                <p class="text-gray-500 text-sm">Try adjusting your search query or category filter.</p>
+            </div>
+        {% endif %}
+    </div>
+
+</div>
+{% endblock %}
