@@ -1,102 +1,79 @@
-# Puddle Marketplace (Django Web Application)
+# Puddle
 
-A clean, idiomatic, fully-functional Django marketplace application built for technical interview demonstration. Buyers can browse, search, and inquire about items via a direct messaging system, while sellers can list, update, and manage their listings.
+A small marketplace web app built with Django and Tailwind CSS. Users can list items for sale, browse and search listings by category, and send direct messages to sellers.
 
----
+## Setup
 
-## 🚀 Quick Start (Local Setup)
-
-1. **Clone & Navigate to Directory**
-   ```bash
-   git clone <repo-url>
-   cd Marketplace
-   ```
-
-2. **Set Up Virtual Environment & Install Dependencies**
+1. Create and activate a virtual environment:
    ```bash
    python3 -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   source venv/bin/activate
+   ```
+
+2. Install dependencies:
+   ```bash
    pip install -r requirements.txt
    ```
 
-3. **Apply Database Migrations**
+3. Run database migrations:
    ```bash
    python manage.py makemigrations
    python manage.py migrate
    ```
 
-4. **Create Superuser (Admin Access)**
+4. Create an admin user (optional):
    ```bash
    python manage.py createsuperuser
    ```
 
-5. **Run Development Server & Access Application**
+5. Start the development server:
    ```bash
    python manage.py runserver
    ```
-   Open your browser and navigate to `http://127.0.0.1:8000/`.
 
-6. **Run Automated Test Suite**
-   ```bash
-   python manage.py test core
-   ```
+To run the test suite:
+```bash
+python manage.py test core
+```
 
----
-
-## 📁 Project Architecture & Directory Structure
+## Project Structure
 
 ```text
 Marketplace/
-├── core/                       # Primary Django Application
-│   ├── admin.py                # Admin site registrations & filters
-│   ├── apps.py                 # Core app config
-│   ├── forms.py                # Forms (SignUpForm, ItemForm, EditItemForm, ContactForm, MessageForm)
-│   ├── models.py               # ORM Models (Category, Item, Profile, Message) & Signals
-│   ├── tests.py                # Unit & Integration test suite
-│   ├── views.py                # Request handling logic (index, browse, detail, item CRUD, inbox, auth)
-│   └── templates/core/         # HTML Templates styled with Tailwind CSS
-│       ├── base.html           # Master layout with navbar, alerts, and footer
-│       ├── index.html          # Homepage with hero & recent listings
-│       ├── browse.html         # Item search & category filter sidebar
-│       ├── detail.html         # Item view with seller actions & buyer messaging
-│       ├── form.html           # Reusable form template for New/Edit Item
-│       ├── contact.html        # Contact form with validation & flash messages
-│       ├── signup.html         # User registration form
-│       ├── login.html          # User authentication login
-│       ├── inbox.html          # Active buyer-seller conversations list
-│       └── conversation.html   # Chat message history & reply box
-├── marketplace/                # Django Project Root Configuration
-│   ├── settings.py             # App settings, media roots, & auth redirects
-│   ├── urls.py                 # Global URL dispatcher & dev media serving
-│   ├── wsgi.py                 # WSGI gateway entrypoint
-│   └── asgi.py                 # ASGI gateway entrypoint
-├── media/                      # Uploaded user images (Item pictures, avatars)
-├── manage.py                   # Django CLI management script
-└── requirements.txt            # Dependency file (Django, Pillow)
+├── core/
+│   ├── admin.py
+│   ├── forms.py
+│   ├── models.py
+│   ├── tests.py
+│   ├── views.py
+│   └── templates/core/
+│       ├── base.html
+│       ├── index.html
+│       ├── browse.html
+│       ├── detail.html
+│       ├── form.html
+│       ├── contact.html
+│       ├── signup.html
+│       ├── login.html
+│       ├── inbox.html
+│       └── conversation.html
+├── marketplace/
+│   ├── settings.py
+│   └── urls.py
+├── media/
+├── manage.py
+└── requirements.txt
 ```
 
----
+## Data Models
 
-## 💡 Plain-English Interview Explanation Guide
+- **Category**: Product category with a name and unique slug used for filtering listings.
+- **Item**: Listed product containing a title, description, price, optional image, category reference, seller reference (Django `User`), and `is_sold` status flag.
+- **Profile**: Extends Django's `User` model with `bio` and `avatar` fields via a `OneToOneField`. A `post_save` signal automatically instantiates a profile whenever a new user account is created.
+- **Message**: Stores buyer-seller messages linked to a specific item, sender, receiver, and read status.
 
-### 1. Database Models (`core/models.py`)
-- **`Category`**: Stores marketplace product categories (e.g., *Electronics*, *Clothing*, *Books*). Uses `slug` for clean URL query filtering.
-- **`Item`**: Represents products listed for sale. Includes title, description, price, optional image, `is_sold` flag, and ForeignKeys linking to `Category` and `seller` (`User`).
-- **`Profile`**: Extends Django's built-in `User` model via a `OneToOneField`. Contains optional user bio and avatar picture.
-- **`Message`**: Stores direct communications between buyers and sellers. Linked to a specific `Item`, `sender` (`User`), and `receiver` (`User`).
+## Auth, Permissions, and Messaging
 
-### 2. Django Signals (`post_save`)
-- **Profile Auto-Creation**: Uses a `@receiver(post_save, sender=User)` signal. Whenever a new `User` account is registered, Django automatically triggers `create_user_profile` to instantiate a linked `Profile` record, ensuring 1:1 integrity without manual creation logic in views.
-
-### 3. Authentication & Security
-- Uses Django's built-in `UserCreationForm` wrapped in `SignUpForm` and built-in `LoginView` / `LogoutView`.
-- Actions requiring login (such as listing an item, editing, deleting, or accessing inbox) are guarded with Django's `@login_required` decorator.
-- Permission enforcement: Edit and delete item endpoints inspect `item.seller == request.user` via `get_object_or_404(Item, pk=pk, seller=request.user)` to guarantee users can only modify their own listings.
-
-### 4. Forms & Validation (`core/forms.py`)
-- **ModelForms** (`ItemForm`, `EditItemForm`, `MessageForm`): Map directly to database models, automatically converting HTML inputs into validated model fields.
-- **Standard Forms** (`ContactForm`): Validates user inputs (Name, Email, Message) using Django's built-in field cleaning before triggering flash notifications with `messages.success()`.
-
-### 5. Direct Messaging System (`inbox` & `conversation_detail`)
-- Plain request/response chat system without websockets or third-party JS.
-- Conversations are grouped dynamically by `(item, other_user)` pair. Unread message counters dynamically update when incoming messages arrive, and incoming unread messages automatically mark as `is_read=True` when viewed.
+- **Authentication**: Built using Django's standard `User` model, `UserCreationForm`, and built-in `LoginView`/`LogoutView`.
+- **Permissions**: Protected views use `@login_required`. Item editing and deletion views enforce `item.seller == request.user` so only item owners can modify or delete listings.
+- **Direct Messaging**: Messages are grouped by item and interlocutor pair. The inbox lists active conversations with unread indicators, and opening a thread automatically marks incoming unread messages as read.
